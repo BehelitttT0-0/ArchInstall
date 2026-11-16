@@ -58,6 +58,11 @@ packages=(
     terminus-font
     ttf-dejavu
     nano
+    code
+    btop
+    fastfetch
+    base-devel
+    git
 
     # AMD Radeon RX 5600 XT
     linux-firmware-amdgpu
@@ -68,6 +73,21 @@ packages=(
 
 log "Обновляю систему и устанавливаю пакеты..."
 sudo pacman -Syu --needed "${packages[@]}"
+
+# AUR helper: yay (prebuilt-source package, no Go compilation needed)
+if command -v yay >/dev/null 2>&1; then
+    log "yay уже установлен."
+else
+    log "Устанавливаю yay из AUR..."
+    yay_tmp="$(mktemp -d)"
+    if git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$yay_tmp/yay-bin" \
+        && (cd "$yay_tmp/yay-bin" && makepkg -si --noconfirm --needed); then
+        log "yay установлен."
+    else
+        warn "Не удалось установить yay. Установи вручную: https://aur.archlinux.org/packages/yay-bin"
+    fi
+    rm -rf "$yay_tmp"
+fi
 
 # Fish as default shell
 if ! grep -Fxq '/usr/bin/fish' /etc/shells; then
@@ -128,7 +148,7 @@ if ! pgrep -x picom >/dev/null 2>&1; then
     picom --config "$HOME/.config/picom/picom.conf" --daemon
 fi
 
-bspc monitor -d 1 2 3 4 5
+bspc monitor -d 1 2 3 4 5 6
 
 bspc config border_width 2
 bspc config window_gap 10
@@ -140,6 +160,15 @@ bspc config pointer_follows_focus false
 bspc config automatic_scheme spiral
 bspc config initial_polarity second_child
 bspc config top_padding 26
+
+# Mouse: Super + drag
+#   LMB  - move window
+#   MMB  - resize by nearest side
+#   RMB  - resize by nearest corner
+bspc config pointer_modifier mod4
+bspc config pointer_action1 move
+bspc config pointer_action2 resize_side
+bspc config pointer_action3 resize_corner
 
 bspc config normal_border_color '#333333'
 bspc config active_border_color '#666666'
@@ -200,12 +229,12 @@ super + shift + {h,j,k,l}
     bspc node -s {west,south,north,east}
 
 # Switch desktops
-super + {1-5}
-    bspc desktop -f '^{1-5}'
+super + {1-6}
+    bspc desktop -f '^{1-6}'
 
 # Move window to desktop
-super + shift + {1-5}
-    bspc node -d '^{1-5}'
+super + shift + {1-6}
+    bspc node -d '^{1-6}'
 
 # Floating / fullscreen
 super + space
@@ -217,6 +246,10 @@ super + m
 # Resize windows
 super + ctrl + {h,j,k,l}
     bspc node -z {left -20 0,bottom 0 20,top 0 -20,right 20 0}
+
+# Move floating windows with keyboard
+super + alt + {h,j,k,l}
+    bspc node -v {-20 0,0 20,0 -20,20 0}
 SXHKD
 
 # ==========================================
@@ -394,7 +427,7 @@ module-margin = 1
 font-0 = DejaVu Sans Mono:size=10
 modules-left = bspwm
 modules-center = date
-modules-right = cpu memory
+modules-right = cpu memory gpu vram
 
 [module/bspwm]
 type = internal/bspwm
@@ -423,6 +456,18 @@ label = CPU %percentage%%
 type = internal/memory
 interval = 5
 label = RAM %percentage_used%%
+
+[module/gpu]
+type = custom/script
+exec = ${env:HOME}/.config/polybar/gpu.sh usage
+interval = 2
+label = GPU %output%
+
+[module/vram]
+type = custom/script
+exec = ${env:HOME}/.config/polybar/gpu.sh vram
+interval = 3
+label = VRAM %output%
 POLYBAR
 
 # Polybar launch script
@@ -437,6 +482,41 @@ done
 
 polybar main -c "$HOME/.config/polybar/config.ini" &
 POLYBARLAUNCH
+
+# GPU / VRAM stats for AMD (amdgpu sysfs)
+write_config "$CONFIG_DIR/polybar/gpu.sh" 755 <<'GPUSH'
+#!/bin/sh
+# Usage: gpu.sh usage|vram
+# Finds the first card exposing amdgpu counters (card index may be 0, 1, ...).
+
+dev=""
+for d in /sys/class/drm/card[0-9]/device; do
+    if [ -r "$d/gpu_busy_percent" ] && [ -r "$d/mem_info_vram_used" ]; then
+        dev="$d"
+        break
+    fi
+done
+
+if [ -z "$dev" ]; then
+    echo "N/A"
+    exit 0
+fi
+
+case "$1" in
+    usage)
+        printf '%s%%\n' "$(cat "$dev/gpu_busy_percent")"
+        ;;
+    vram)
+        used="$(cat "$dev/mem_info_vram_used")"
+        total="$(cat "$dev/mem_info_vram_total")"
+        awk -v u="$used" -v t="$total" \
+            'BEGIN { printf "%.1f/%.1fG\n", u/1073741824, t/1073741824 }'
+        ;;
+    *)
+        echo "N/A"
+        ;;
+esac
+GPUSH
 
 # ==========================================
 # DUNST
@@ -535,21 +615,30 @@ cat <<'DONE'
 
 ГОРЯЧИЕ КЛАВИШИ:
 
-Super + Enter       Alacritty
-Super + D           Rofi
-Super + E           PCManFM
-Super + W           Firefox
-Super + Q           Закрыть окно
+Super + Enter        Alacritty
+Super + D            Rofi
+Super + E            PCManFM
+Super + F            Firefox
+Super + W            Закрыть окно
 
-Super + H/J/K/L     Переключение между окнами
-Super + 1..5        Рабочие столы
-Super + Shift + 1..5 Переместить окно
+Super + H/J/K/L      Переключение между окнами
+Super + 1..6         Рабочие столы
+Super + Shift + 1..6 Переместить окно
 
-Super + Space       Переключить floating
-Super + F           Полноэкранный режим
+Super + Space        Переключить floating
+Super + M            Полноэкранный режим
 
-Super + Shift + R   Перезапустить BSPWM
-Super + Shift + Q   Выйти из BSPWM
+Super + Ctrl + HJKL  Изменить размер окна
+Super + Alt + HJKL   Сдвинуть floating-окно
+
+МЫШЬ (Super + перетаскивание):
+
+Super + ЛКМ          Переместить окно
+Super + СКМ          Изменить размер (по стороне)
+Super + ПКМ          Изменить размер (по углу)
+
+Super + Shift + R    Перезапустить BSPWM
+Super + Shift + Q    Выйти из BSPWM
 
 Обои:
 
@@ -560,5 +649,6 @@ Picom работает только как композитор для проз�
 Тени, размытие, затемнение и затухания отключены.
 
 Для RX 5600 XT используется открытый драйверный стек AMDGPU/Mesa.
+Загрузка GPU и VRAM берутся из sysfs (amdgpu) и показываются в Polybar.
 
 DONE
