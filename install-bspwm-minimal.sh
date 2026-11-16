@@ -343,58 +343,63 @@ FISH
 
 write_config "$CONFIG_DIR/rofi/config.rasi" 644 <<'ROFI'
 configuration {
-    modi: "drun,run,window";
+    modi: "drun";
     show-icons: false;
-    display-drun: "APPS";
-    display-run: "RUN";
-    display-window: "WINDOWS";
-    font: "DejaVu Sans Mono 11";
+    display-drun: ">";
+    drun-display-format: "{name}";
+    disable-history: false;
+    font: "DejaVu Sans Mono 10";
 }
 
 * {
     background-color: #080808;
-    text-color: #EEEEEE;
+    text-color: #CCCCCC;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    spacing: 0;
 }
 
 window {
-    width: 40%;
+    location: center;
+    anchor: center;
+    width: 420px;
     border: 1px;
-    border-color: #555555;
-    background-color: #080808;
+    border-color: #444444;
+    padding: 0;
 }
 
 mainbox {
-    padding: 12px;
-    background-color: #080808;
+    padding: 14px;
+    children: [ inputbar, listview ];
 }
 
 inputbar {
-    padding: 8px;
-    background-color: #080808;
+    padding: 0 0 12px 0;
     children: [ prompt, entry ];
 }
 
 prompt {
-    text-color: #888888;
-    background-color: #080808;
+    text-color: #777777;
+    padding: 0 10px 0 0;
 }
 
 entry {
-    text-color: #EEEEEE;
-    background-color: #080808;
+    text-color: #FFFFFF;
+    placeholder: "";
 }
 
 listview {
-    lines: 6;
-    spacing: 5px;
-    padding: 8px 0px;
-    background-color: #080808;
+    lines: 8;
+    columns: 1;
+    scrollbar: false;
+    fixed-height: true;
+    spacing: 2px;
 }
 
 element {
-    padding: 8px;
-    background-color: #080808;
-    text-color: #CCCCCC;
+    padding: 6px 8px;
+    text-color: #888888;
 }
 
 element selected {
@@ -462,13 +467,13 @@ label = RAM %percentage_used%%
 
 [module/gpu]
 type = custom/script
-exec = ${env:HOME}/.config/polybar/gpu.sh usage
+exec = sh ~/.config/polybar/gpu.sh usage
 interval = 2
 label = GPU %output%
 
 [module/vram]
 type = custom/script
-exec = ${env:HOME}/.config/polybar/gpu.sh vram
+exec = sh ~/.config/polybar/gpu.sh vram
 interval = 3
 label = VRAM %output%
 POLYBAR
