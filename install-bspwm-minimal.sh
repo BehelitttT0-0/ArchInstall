@@ -173,11 +173,11 @@ super + d
 super + e
     pcmanfm
 
-super + w
+super + f
     firefox
 
 # Close window
-super + q
+super + w
     bspc node -c
 
 # Restart / quit BSPWM
@@ -211,7 +211,7 @@ super + shift + {1-5}
 super + space
     bspc node -t ~floating
 
-super + f
+super + m
     bspc node -t ~fullscreen
 
 # Resize windows
@@ -225,7 +225,7 @@ SXHKD
 
 write_config "$CONFIG_DIR/alacritty/alacritty.toml" 644 <<'ALACRITTY'
 [window]
-opacity = 0.90
+opacity = 0.80
 decorations = "none"
 padding = { x = 12, y = 10 }
 dynamic_padding = true
