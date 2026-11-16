@@ -261,7 +261,7 @@ SXHKD
 
 write_config "$CONFIG_DIR/alacritty/alacritty.toml" 644 <<'ALACRITTY'
 [window]
-opacity = 0.80
+opacity = 0.70
 decorations = "none"
 padding = { x = 12, y = 10 }
 dynamic_padding = true
