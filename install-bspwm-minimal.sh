@@ -1,6 +1,9 @@
-
 #!/usr/bin/env bash
 set -Eeuo pipefail
+
+# Minimal monochrome Arch Linux desktop:
+# BSPWM + sxhkd + Alacritty + Fish.
+# Picom is used only for Alacritty transparency.
 
 readonly HOME_DIR="${HOME:?HOME is not set}"
 readonly CONFIG_DIR="$HOME_DIR/.config"
@@ -18,13 +21,15 @@ write_config() {
     log "Wrote $target"
 }
 
-[[ "$EUID" -ne 0 ]] || die "Do not run this script with sudo."
-[[ -f /etc/arch-release ]] || die "Arch Linux required."
-command -v sudo >/dev/null 2>&1 || die "sudo not found."
-command -v pacman >/dev/null 2>&1 || die "pacman not found."
+[[ "$EUID" -ne 0 ]] || die "Не запускай скрипт через sudo."
+[[ -f /etc/arch-release ]] || die "Скрипт предназначен для Arch Linux."
+command -v sudo >/dev/null 2>&1 || die "Не найден sudo."
+command -v pacman >/dev/null 2>&1 || die "Не найден pacman."
 
-log "Starting installation."
-read -r -p "Continue? [y/N] " answer
+log "Будут установлены BSPWM, Xorg, приложения и Picom."
+log "Конфигурации будут записаны напрямую, без резервных копий."
+
+read -r -p "Продолжить? [y/N] " answer
 [[ "$answer" =~ ^[Yy]$ ]] || exit 0
 
 sudo -v
@@ -53,15 +58,18 @@ packages=(
     terminus-font
     ttf-dejavu
     nano
+
+    # AMD Radeon RX 5600 XT
     linux-firmware-amdgpu
     mesa
     vulkan-radeon
     libva-mesa-driver
 )
 
-log "Installing packages."
+log "Обновляю систему и устанавливаю пакеты..."
 sudo pacman -Syu --needed "${packages[@]}"
 
+# Fish as default shell
 if ! grep -Fxq '/usr/bin/fish' /etc/shells; then
     printf '%s\n' '/usr/bin/fish' | sudo tee -a /etc/shells >/dev/null
 fi
@@ -69,21 +77,25 @@ fi
 current_shell="$(getent passwd "$USER" | cut -d: -f7)"
 
 if [[ "$current_shell" != "/usr/bin/fish" ]]; then
-    chsh -s /usr/bin/fish "$USER" || warn "Could not change shell."
+    chsh -s /usr/bin/fish "$USER" \
+        || warn "Не удалось сменить shell автоматически."
 fi
 
+# NetworkManager
 sudo systemctl enable --now NetworkManager.service
 
+# PipeWire
 if systemctl --user show-environment >/dev/null 2>&1; then
     systemctl --user enable --now \
         pipewire.socket \
         pipewire-pulse.socket \
         wireplumber.service \
-        || warn "Could not enable PipeWire."
+        || warn "Не удалось включить PipeWire автоматически."
 else
-    warn "User systemd manager unavailable."
+    warn "Пользовательский systemd manager недоступен."
 fi
 
+# Directories
 mkdir -p \
     "$CONFIG_DIR/bspwm" \
     "$CONFIG_DIR/sxhkd" \
@@ -94,6 +106,10 @@ mkdir -p \
     "$CONFIG_DIR/dunst" \
     "$CONFIG_DIR/picom" \
     "$HOME_DIR/Pictures"
+
+# ==========================================
+# BSPWM
+# ==========================================
 
 write_config "$CONFIG_DIR/bspwm/bspwmrc" 755 <<'BSPWM'
 #!/bin/sh
@@ -140,52 +156,72 @@ if [ -f "$HOME/Pictures/wallpaper.png" ]; then
 fi
 BSPWM
 
+# ==========================================
+# SXHKD
+# ==========================================
+
 write_config "$CONFIG_DIR/sxhkd/sxhkdrc" 644 <<'SXHKD'
+# Terminal
 super + Return
     alacritty
 
+# Application launcher
 super + d
     rofi -show drun
 
+# Applications
 super + e
     pcmanfm
 
 super + w
     firefox
 
+# Close window
 super + q
     bspc node -c
 
+# Restart / quit BSPWM
 super + shift + r
     bspc wm -r
 
 super + shift + q
     bspc quit
 
+# Reload sxhkd
 super + Escape
     pkill -USR1 -x sxhkd
 
+# Focus windows
 super + {h,j,k,l}
     bspc node -f {west,south,north,east}
 
+# Swap windows
 super + shift + {h,j,k,l}
     bspc node -s {west,south,north,east}
 
+# Switch desktops
 super + {1-5}
     bspc desktop -f '^{1-5}'
 
+# Move window to desktop
 super + shift + {1-5}
     bspc node -d '^{1-5}'
 
+# Floating / fullscreen
 super + space
     bspc node -t ~floating
 
 super + f
     bspc node -t ~fullscreen
 
+# Resize windows
 super + ctrl + {h,j,k,l}
     bspc node -z {left -20 0,bottom 0 20,top 0 -20,right 20 0}
 SXHKD
+
+# ==========================================
+# ALACRITTY
+# ==========================================
 
 write_config "$CONFIG_DIR/alacritty/alacritty.toml" 644 <<'ALACRITTY'
 [window]
@@ -241,11 +277,16 @@ unfocused_hollow = false
 save_to_clipboard = true
 ALACRITTY
 
+# ==========================================
+# FISH
+# ==========================================
+
 write_config "$CONFIG_DIR/fish/config.fish" 644 <<'FISH'
 set -g fish_greeting
 
 set -gx EDITOR nano
 set -gx VISUAL nano
+
 set -gx SXHKD_SHELL /bin/sh
 
 alias ll 'ls -lah'
@@ -259,6 +300,10 @@ set -g fish_color_error brwhite
 set -g fish_color_quote white
 set -g fish_color_autosuggestion brblack
 FISH
+
+# ==========================================
+# ROFI
+# ==========================================
 
 write_config "$CONFIG_DIR/rofi/config.rasi" 644 <<'ROFI'
 configuration {
@@ -322,6 +367,10 @@ element selected {
 }
 ROFI
 
+# ==========================================
+# POLYBAR
+# ==========================================
+
 write_config "$CONFIG_DIR/polybar/config.ini" 644 <<'POLYBAR'
 [colors]
 background = #080808
@@ -376,6 +425,7 @@ interval = 5
 label = RAM %percentage_used%%
 POLYBAR
 
+# Polybar launch script
 write_config "$CONFIG_DIR/polybar/launch.sh" 755 <<'POLYBARLAUNCH'
 #!/bin/sh
 
@@ -387,6 +437,10 @@ done
 
 polybar main -c "$HOME/.config/polybar/config.ini" &
 POLYBARLAUNCH
+
+# ==========================================
+# DUNST
+# ==========================================
 
 write_config "$CONFIG_DIR/dunst/dunstrc" 644 <<'DUNST'
 [global]
@@ -419,7 +473,14 @@ write_config "$CONFIG_DIR/dunst/dunstrc" 644 <<'DUNST'
     frame_color = "#FFFFFF"
 DUNST
 
+# ==========================================
+# PICOM
+# ==========================================
+
 write_config "$CONFIG_DIR/picom/picom.conf" 644 <<'PICOM'
+# Only window compositing and client opacity.
+# No shadows, fading, blur or dimming.
+
 backend = "xrender";
 vsync = false;
 
@@ -431,15 +492,23 @@ inactive-opacity = 1.0;
 detect-client-opacity = true;
 PICOM
 
+# ==========================================
+# XINITRC
+# ==========================================
+
 write_config "$HOME_DIR/.xinitrc" 755 <<'XINITRC'
 #!/bin/sh
 exec bspwm
 XINITRC
 
-log "Updating font cache."
-fc-cache -f >/dev/null 2>&1 || warn "Could not update font cache."
+# ==========================================
+# FINISH
+# ==========================================
 
-log "Checking installed commands."
+log "Обновляю кеш шрифтов."
+fc-cache -f >/dev/null 2>&1 || warn "Не удалось обновить кеш шрифтов."
+
+log "Проверяю установленные команды..."
 
 for cmd in startx bspwm sxhkd alacritty fish pcmanfm firefox rofi polybar dunst picom feh; do
     if command -v "$cmd" >/dev/null 2>&1; then
@@ -449,4 +518,47 @@ for cmd in startx bspwm sxhkd alacritty fish pcmanfm firefox rofi polybar dunst 
     fi
 done
 
-log "Installation completed."
+cat <<'DONE'
+
+========================================
+             ГОТОВО
+========================================
+
+Что дальше:
+
+1. Перезагрузи компьютер.
+2. Войди в систему под своим пользователем.
+3. Перейди в TTY: Ctrl + Alt + F3.
+4. Запусти графическую сессию:
+
+   startx
+
+ГОРЯЧИЕ КЛАВИШИ:
+
+Super + Enter       Alacritty
+Super + D           Rofi
+Super + E           PCManFM
+Super + W           Firefox
+Super + Q           Закрыть окно
+
+Super + H/J/K/L     Переключение между окнами
+Super + 1..5        Рабочие столы
+Super + Shift + 1..5 Переместить окно
+
+Super + Space       Переключить floating
+Super + F           Полноэкранный режим
+
+Super + Shift + R   Перезапустить BSPWM
+Super + Shift + Q   Выйти из BSPWM
+
+Обои:
+
+Положи изображение сюда:
+~/Pictures/wallpaper.png
+
+Picom работает только как композитор для прозрачности Alacritty.
+Тени, размытие, затемнение и затухания отключены.
+
+Для RX 5600 XT используется открытый драйверный стек AMDGPU/Mesa.
+
+DONE
