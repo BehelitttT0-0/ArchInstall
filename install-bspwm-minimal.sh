@@ -647,8 +647,8 @@ Super + Shift + 1..6 Переместить окно
 Super + Space        Переключить floating
 Super + M            Полноэкранный режим
 
-Super + Ctrl + HJKL  Изменить размер окна
-Super + Alt + HJKL   Сдвинуть floating-окно
+Super + Ctrl + Left,Down,Up,Right  Изменить размер окна
+Super + Alt + Left,Down,Up,Right   Сдвинуть floating-окно
 
 МЫШЬ (Super + перетаскивание):
 
