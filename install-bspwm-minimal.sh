@@ -342,6 +342,8 @@ FISH
 # ==========================================
 
 write_config "$CONFIG_DIR/rofi/config.rasi" 644 <<'ROFI'
+@theme "/dev/null"
+
 configuration {
     modi: "drun";
     show-icons: false;
@@ -364,8 +366,8 @@ window {
     location: center;
     anchor: center;
     width: 420px;
-    border: 1px;
-    border-color: #444444;
+    border: 3px;
+    border-color: #555555;
     padding: 0;
 }
 
@@ -397,14 +399,23 @@ listview {
     spacing: 2px;
 }
 
-element {
+element, element normal.normal, element alternate.normal,
+element normal.active, element alternate.active,
+element normal.urgent, element alternate.urgent {
     padding: 6px 8px;
+    border: 0;
+    background-color: #080808;
     text-color: #888888;
 }
 
-element selected {
+element selected.normal, element selected.active, element selected.urgent {
     background-color: #333333;
     text-color: #FFFFFF;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
 }
 ROFI
 
