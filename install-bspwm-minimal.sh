@@ -63,6 +63,7 @@ packages=(
     fastfetch
     base-devel
     git
+    xorg-setxkbmap
 
     # AMD Radeon RX 5600 XT
     linux-firmware-amdgpu
@@ -139,6 +140,8 @@ export SXHKD_SHELL=/bin/sh
 if ! pgrep -x sxhkd >/dev/null 2>&1; then
     sxhkd &
 fi
+
+setxkbmap -layout "us,ru" -option "grp:win_space_toggle"
 
 if ! pgrep -x dunst >/dev/null 2>&1; then
     dunst &
@@ -237,7 +240,7 @@ super + shift + {1-6}
     bspc node -d '^{1-6}'
 
 # Floating / fullscreen
-super + space
+super + shift + space
     bspc node -t ~floating
 
 super + m
