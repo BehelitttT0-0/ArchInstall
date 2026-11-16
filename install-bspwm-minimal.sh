@@ -224,11 +224,11 @@ super + Escape
     pkill -USR1 -x sxhkd
 
 # Focus windows
-super + {h,j,k,l}
+super + {Left,Down,Up,Right}
     bspc node -f {west,south,north,east}
 
 # Swap windows
-super + shift + {h,j,k,l}
+super + shift + {Left,Down,Up,Right}
     bspc node -s {west,south,north,east}
 
 # Switch desktops
@@ -247,11 +247,11 @@ super + m
     bspc node -t ~fullscreen
 
 # Resize windows
-super + ctrl + {h,j,k,l}
+super + ctrl + {Left,Down,Up,Right}
     bspc node -z {left -20 0,bottom 0 20,top 0 -20,right 20 0}
 
 # Move floating windows with keyboard
-super + alt + {h,j,k,l}
+super + alt + {Left,Down,Up,Right}
     bspc node -v {-20 0,0 20,0 -20,20 0}
 SXHKD
 
