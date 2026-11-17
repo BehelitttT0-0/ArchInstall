@@ -20,8 +20,8 @@
 ## Установка
 
 ```bash
-git clone https://github.com/ТВОЙ_НИК/ТВОЙ_РЕПОЗИТОРИЙ.git
-cd ТВОЙ_РЕПОЗИТОРИЙ
+git clone https://github.com/BehelitttT0-0/ArchInstall.git
+cd ArchInstall
 chmod +x install-bspwm-minimal.sh
 ./install-bspwm-minimal.sh
 ```
