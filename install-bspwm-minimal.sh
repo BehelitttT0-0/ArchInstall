@@ -335,13 +335,6 @@ set -g fish_color_param brwhite
 set -g fish_color_error brwhite
 set -g fish_color_quote white
 set -g fish_color_autosuggestion brblack
-
-# Автозапуск X после входа в TTY1
-if status is-login
-    if test -z "$DISPLAY" -a "$XDG_VTNR" = "1"
-        exec startx
-    end
-end
 FISH
 
 # ==========================================
@@ -453,7 +446,7 @@ module-margin = 1
 font-0 = DejaVu Sans Mono:size=10
 modules-left = bspwm
 modules-center = date
-modules-right = cpu memory gpu vram
+modules-right = cpu memory gpu vram volume keyboard
 
 [module/bspwm]
 type = internal/bspwm
@@ -494,6 +487,30 @@ type = custom/script
 exec = sh ~/.config/polybar/gpu.sh vram
 interval = 3
 label = VRAM %output%
+
+[module/volume]
+type = internal/pulseaudio
+use-ui-max = false
+interval = 5
+format-volume = <label-volume>
+label-volume = VOL %percentage%%
+label-muted = VOL MUTE
+label-muted-foreground = ${colors.muted}
+# ЛКМ - открыть/закрыть регулировку громкости (pavucontrol)
+# ПКМ - включить/выключить звук
+# Колесо мыши - изменить громкость
+click-left = sh -c 'pgrep -x pavucontrol >/dev/null && pkill -x pavucontrol || pavucontrol'
+click-right = pactl set-sink-mute @DEFAULT_SINK@ toggle
+
+[module/keyboard]
+type = internal/xkeyboard
+blacklist-0 = num lock
+blacklist-1 = caps lock
+blacklist-2 = scroll lock
+format = <label-layout>
+label-layout = %icon%
+layout-icon-0 = us;US
+layout-icon-1 = ru;RU
 POLYBAR
 
 # Polybar launch script
@@ -651,7 +668,8 @@ Super + H/J/K/L      Переключение между окнами
 Super + 1..6         Рабочие столы
 Super + Shift + 1..6 Переместить окно
 
-Super + Space        Переключить floating
+Win + Space          Переключить раскладку (RU/US в Polybar)
+Super + Shift + Space Переключить floating
 Super + M            Полноэкранный режим
 
 Super + Ctrl + Left,Down,Up,Right  Изменить размер окна
