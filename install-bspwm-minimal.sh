@@ -335,6 +335,13 @@ set -g fish_color_param brwhite
 set -g fish_color_error brwhite
 set -g fish_color_quote white
 set -g fish_color_autosuggestion brblack
+
+# Автозапуск X после входа в TTY1
+if status is-login
+    if test -z "$DISPLAY" -a "$XDG_VTNR" = "1"
+        exec startx
+    end
+end
 FISH
 
 # ==========================================
