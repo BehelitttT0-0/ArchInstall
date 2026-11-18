@@ -62,7 +62,7 @@ packages=(
     base-devel
     git
     xorg-setxkbmap
-    range
+    ranger
     p7zip
 
     # AMD Radeon RX 5600 XT
@@ -203,7 +203,7 @@ super + d
 
 # Applications
 super + e
-    range
+    ranger
 
 super + f
     firefox
