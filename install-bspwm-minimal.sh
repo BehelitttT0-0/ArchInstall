@@ -42,7 +42,6 @@ packages=(
     sxhkd
     alacritty
     fish
-    pcmanfm
     firefox
     rofi
     feh
@@ -54,7 +53,6 @@ packages=(
     pipewire-pulse
     wireplumber
     pavucontrol
-    gvfs
     terminus-font
     ttf-dejavu
     nano
@@ -64,6 +62,8 @@ packages=(
     base-devel
     git
     xorg-setxkbmap
+    range
+    p7zip
 
     # AMD Radeon RX 5600 XT
     linux-firmware-amdgpu
