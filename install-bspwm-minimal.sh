@@ -203,7 +203,7 @@ super + d
 
 # Applications
 super + e
-    pcmanfm
+    range
 
 super + f
     firefox
