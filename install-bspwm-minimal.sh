@@ -526,15 +526,22 @@ done
 polybar main -c "$HOME/.config/polybar/config.ini" &
 POLYBARLAUNCH
 
-# GPU / VRAM stats for AMD (amdgpu sysfs)
+# GPU / VRAM stats for AMD RX 5600 XT (amdgpu sysfs)
 write_config "$CONFIG_DIR/polybar/gpu.sh" 755 <<'GPUSH'
 #!/bin/sh
 # Usage: gpu.sh usage|vram
-# Finds the first card exposing amdgpu counters (card index may be 0, 1, ...).
+# AMD Radeon RX 5600 XT (PCI ID: 0x731f)
 
 dev=""
+
 for d in /sys/class/drm/card[0-9]/device; do
-    if [ -r "$d/gpu_busy_percent" ] && [ -r "$d/mem_info_vram_used" ]; then
+    [ -r "$d/vendor" ] || continue
+    [ -r "$d/device" ] || continue
+
+    vendor=$(cat "$d/vendor")
+    device=$(cat "$d/device")
+
+    if [ "$vendor" = "0x1002" ] && [ "$device" = "0x731f" ]; then
         dev="$d"
         break
     fi
@@ -550,8 +557,9 @@ case "$1" in
         printf '%s%%\n' "$(cat "$dev/gpu_busy_percent")"
         ;;
     vram)
-        used="$(cat "$dev/mem_info_vram_used")"
-        total="$(cat "$dev/mem_info_vram_total")"
+        used=$(cat "$dev/mem_info_vram_used")
+        total=$(cat "$dev/mem_info_vram_total")
+
         awk -v u="$used" -v t="$total" \
             'BEGIN { printf "%.1f/%.1fG\n", u/1073741824, t/1073741824 }'
         ;;
