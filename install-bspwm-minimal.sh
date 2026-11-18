@@ -64,7 +64,6 @@ packages=(
     base-devel
     git
     xorg-setxkbmap
-    lxpolkit
 
     # AMD Radeon RX 5600 XT
     linux-firmware-amdgpu
@@ -150,10 +149,6 @@ fi
 
 if ! pgrep -x picom >/dev/null 2>&1; then
     picom --config "$HOME/.config/picom/picom.conf" --daemon
-fi
-
-if ! pgrep -x lxpolkit >/dev/null 2>&1; then
-    lxpolkit &
 fi
 
 bspc monitor -d 1 2 3 4 5 6
