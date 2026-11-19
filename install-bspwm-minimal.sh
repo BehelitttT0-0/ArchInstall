@@ -64,6 +64,8 @@ packages=(
     xorg-setxkbmap
     ranger
     p7zip
+    xclip
+    maim
 
     # AMD Radeon RX 5600 XT
     linux-firmware-amdgpu
@@ -207,6 +209,9 @@ super + e
 
 super + f
     firefox
+
+super + shift + s
+    maim -s | xclip -selection clipboard -t image/png
 
 # Close window
 super + w
