@@ -618,7 +618,7 @@ write_config "$CONFIG_DIR/picom/picom.conf" 644 <<'PICOM'
 # No shadows, fading, blur or dimming.
 
 backend = "xrender";
-vsync = false;
+vsync = true;
 
 shadow = false;
 fading = false;
